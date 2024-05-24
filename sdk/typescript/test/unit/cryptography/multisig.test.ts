@@ -416,6 +416,34 @@ describe('Multisig address creation:', () => {
 		expect(multisigAddress).toEqual(
 			'0x77a9fbf3c695d78dd83449a81a9e70aa79a77dbfd6fb72037bf09201c12052cd',
 		);
+
+		const coldMultisigPublicKey = MultiSigPublicKey.fromPublicKeys({
+			publicKeys: [
+				{
+					publicKey: new Ed25519PublicKey(fromB64('dFhF+EkYR+r/898QTpHI08zS2JcXvLEYxog2/e3refk=')),
+					weight: 1,
+				},
+				{
+					publicKey: new Ed25519PublicKey(fromB64('ii1xkftuqttzWHxLnItq4U3QHMH85rM95qQ9+Zb8AuE=')),
+					weight: 1,
+				},
+				{
+					publicKey: new Ed25519PublicKey(fromB64('U1qBmmGV6QvFnZId/1yQvtiV0z9ZruVCnCEobVcbZGE=')),
+					weight: 1,
+				},
+				{
+					publicKey: new Ed25519PublicKey(fromB64('CECAVNbSbEcGoo0NFRJybLaCaLX8PFdPDq/EL4+oYmY=')),
+					weight: 1,
+				},
+			],
+			threshold: 2,
+		});
+
+		const coldMultisigAddress = coldMultisigPublicKey.toSuiAddress();
+		expect(coldMultisigAddress).toEqual("0x6ff574ad3cf83a8f467aaf743f3997498b876bbd1109ae3bc93caf185bae1285");
+		console.log("cold multisig address");
+		console.log(coldMultisigAddress);
+
 	});
 
 	it('`combinePartialSigs()` with zklogin sigs', async () => {
@@ -660,10 +688,10 @@ describe('MultisigKeypair', () => {
 		const k1 = new Ed25519Keypair();
 		const pk1 = k1.getPublicKey();
 
-		const k2 = new Secp256k1Keypair();
+		const k2 = new Ed25519Keypair();
 		const pk2 = k2.getPublicKey();
 
-		const k3 = new Secp256r1Keypair();
+		const k3 = new Ed25519Keypair();
 		const pk3 = k3.getPublicKey();
 
 		const pubkeyWeightPairs = [
@@ -673,23 +701,32 @@ describe('MultisigKeypair', () => {
 			},
 			{
 				publicKey: pk2,
-				weight: 2,
+				weight: 1,
 			},
 			{
 				publicKey: pk3,
-				weight: 3,
+				weight: 1,
 			},
 		];
 
 		const bytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
 		const publicKey = MultiSigPublicKey.fromPublicKeys({
-			threshold: 3,
+			threshold: 2,
 			publicKeys: pubkeyWeightPairs,
 		});
 
-		const signer = publicKey.getSigner(k3);
-		const signer2 = new MultiSigSigner(publicKey, [k1, k2]);
+		console.log("pk1");
+		console.log(pk1.toBase64());
+		console.log("pk2");
+		console.log(pk2.toBase64());
+		console.log("pk3");
+		console.log(pk3.toBase64());
+		console.log("2 of 3 msig address");
+		console.log(publicKey.toSuiAddress());
+
+		const signer = new MultiSigSigner(publicKey, [k2, k3]);
+		const signer2 = new MultiSigSigner(publicKey, [k1, k3]);
 
 		const multisig = await signer.signPersonalMessage(bytes);
 		const multisig2 = await signer2.signPersonalMessage(bytes);

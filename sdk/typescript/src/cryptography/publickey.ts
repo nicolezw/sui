@@ -107,7 +107,10 @@ export abstract class PublicKey {
 		const rawBytes = this.toRawBytes();
 		const suiBytes = new Uint8Array(rawBytes.length + 1);
 		suiBytes.set([this.flag()]);
+		// console.log("toSuiBytes");
+		// console.log(suiBytes);
 		suiBytes.set(rawBytes, 1);
+		// console.log(suiBytes);
 
 		return suiBytes;
 	}

@@ -187,17 +187,26 @@ export class MultiSigPublicKey extends PublicKey {
 	override toSuiAddress(): string {
 		// max length = 1 flag byte + (max pk size + max weight size (u8)) * max signer size + 2 threshold bytes (u16)
 		const maxLength = 1 + (64 + 1) * MAX_SIGNER_IN_MULTISIG + 2;
+		// console.log("temp");
 		const tmp = new Uint8Array(maxLength);
+		// console.log(tmp);
+		// console.log("temp signature scheme");
 		tmp.set([SIGNATURE_SCHEME_TO_FLAG['MultiSig']]);
-
+		// console.log(tmp);
 		tmp.set(bcs.u16().serialize(this.multisigPublicKey.threshold).toBytes(), 1);
+		// console.log("temp mulltisig threshold");
+		// console.log(tmp);
 		// The initial value 3 ensures that following data will be after the flag byte and threshold bytes
 		let i = 3;
 		for (const { publicKey, weight } of this.publicKeys) {
 			const bytes = publicKey.toSuiBytes();
+			// console.log("temp pub key bytes");
 			tmp.set(bytes, i);
+			// console.log(tmp);
 			i += bytes.length;
 			tmp.set([weight], i++);
+			// console.log("temp pub key weight");
+			// console.log(tmp);
 		}
 		return normalizeSuiAddress(bytesToHex(blake2b(tmp.slice(0, i), { dkLen: 32 })));
 	}
