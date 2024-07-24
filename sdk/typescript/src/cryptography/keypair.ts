@@ -1,7 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs, toB64 } from '@mysten/bcs';
+import {bcs, toB58, toB64} from '@mysten/bcs';
 import { blake2b } from '@noble/hashes/blake2b';
 import { bech32 } from 'bech32';
 
@@ -44,6 +44,7 @@ export abstract class Signer {
 	async signWithIntent(bytes: Uint8Array, intent: IntentScope): Promise<SignatureWithBytes> {
 		const intentMessage = messageWithIntent(intent, bytes);
 		const digest = blake2b(intentMessage, { dkLen: 32 });
+		console.log(toB58(digest));
 
 		const signature = toSerializedSignature({
 			signature: await this.sign(digest),

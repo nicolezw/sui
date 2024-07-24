@@ -1,7 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { toB64 } from '@mysten/bcs';
+import {fromB58, toB58, toB64} from '@mysten/bcs';
 import { blake2b } from '@noble/hashes/blake2b';
 import { bytesToHex } from '@noble/hashes/utils';
 
@@ -72,6 +72,20 @@ export abstract class PublicKey {
 		const intentMessage = messageWithIntent(intent, bytes);
 		const digest = blake2b(intentMessage, { dkLen: 32 });
 
+		console.log("intentMessage");
+		console.log(toB64(intentMessage));
+		console.log("b58 digets", toB58(digest));
+		return this.verify(digest, signature);
+	}
+
+	verifyWithDigest(
+		digestString: string,
+		signature: Uint8Array | SerializedSignature,
+	): Promise<boolean> {
+		const digest = fromB58(digestString);
+
+		console.log("b58 digest", digestString);
+		console.log("digest bytes", digest);
 		return this.verify(digest, signature);
 	}
 

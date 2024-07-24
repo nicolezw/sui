@@ -1,11 +1,16 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { fromB64, toB58, toB64 } from '@mysten/bcs';
+import {fromB58, fromB64, fromHEX, toB58, toB64} from '@mysten/bcs';
 import { beforeAll, describe, expect, it, test } from 'vitest';
 
 import { bcs } from '../../../src/bcs';
-import { parseSerializedSignature, SIGNATURE_SCHEME_TO_FLAG } from '../../../src/cryptography';
+import {
+	encodeSuiPrivateKey,
+	IntentScope,
+	parseSerializedSignature, SIGNATURE_FLAG_TO_SCHEME,
+	SIGNATURE_SCHEME_TO_FLAG
+} from '../../../src/cryptography';
 import { SignatureWithBytes } from '../../../src/cryptography/keypair';
 import { PublicKey } from '../../../src/cryptography/publickey';
 import { Ed25519Keypair, Ed25519PublicKey } from '../../../src/keypairs/ed25519';
@@ -417,22 +422,27 @@ describe('Multisig address creation:', () => {
 			'0x77a9fbf3c695d78dd83449a81a9e70aa79a77dbfd6fb72037bf09201c12052cd',
 		);
 
+		const ck1 = new Ed25519PublicKey(fromB64('dFhF+EkYR+r/898QTpHI08zS2JcXvLEYxog2/e3refk='));
+		const ck2 = new Ed25519PublicKey(fromB64('ii1xkftuqttzWHxLnItq4U3QHMH85rM95qQ9+Zb8AuE='));
+		const ck3 = new Ed25519PublicKey(fromB64('U1qBmmGV6QvFnZId/1yQvtiV0z9ZruVCnCEobVcbZGE='));
+		const ck4 = new Ed25519PublicKey(fromB64('CECAVNbSbEcGoo0NFRJybLaCaLX8PFdPDq/EL4+oYmY='));
+
 		const coldMultisigPublicKey = MultiSigPublicKey.fromPublicKeys({
 			publicKeys: [
 				{
-					publicKey: new Ed25519PublicKey(fromB64('dFhF+EkYR+r/898QTpHI08zS2JcXvLEYxog2/e3refk=')),
+					publicKey: ck1,
 					weight: 1,
 				},
 				{
-					publicKey: new Ed25519PublicKey(fromB64('ii1xkftuqttzWHxLnItq4U3QHMH85rM95qQ9+Zb8AuE=')),
+					publicKey: ck2,
 					weight: 1,
 				},
 				{
-					publicKey: new Ed25519PublicKey(fromB64('U1qBmmGV6QvFnZId/1yQvtiV0z9ZruVCnCEobVcbZGE=')),
+					publicKey: ck3,
 					weight: 1,
 				},
 				{
-					publicKey: new Ed25519PublicKey(fromB64('CECAVNbSbEcGoo0NFRJybLaCaLX8PFdPDq/EL4+oYmY=')),
+					publicKey: ck4,
 					weight: 1,
 				},
 			],
@@ -444,6 +454,27 @@ describe('Multisig address creation:', () => {
 		console.log("cold multisig address");
 		console.log(coldMultisigAddress);
 
+		const data = new Uint8Array(
+			fromB64(
+				'AAAGAQDDYlImaxRUmQciY7cygTGZVQ7x6MfvYFN29H1P9X4FcwIAAAAAAAAAIIypOj/cGJ1q9uXa/RIB+k35uUB+rTbtOzZIQcEyiWWeAQACYoU/gJdjlYT+1scKOqBrXtSKGejPSowmp6I5qDrNFgIAAAAAAAAAINvZf7qnkGgSuYXExin2oU1M84Y4ztgObAxjUShMxLyBAQATTVx+ZxfjzxV29W2KcooVYUBE3Y6koDVJh4OW2aaBcwIAAAAAAAAAIGr2/b+MkT5DY88zxEyfAN29CGP0cYLhrrVWKwCHkxhMAQBz3jI/OK8YIR3eQUotstlT8XIQJ9s4T3EwXXTz0UoRmAIAAAAAAAAAIJ9o7/rapGxr2gqadg6Y9kz50bh/Nae0uH0C6hSsvcL8AAgAypo7AAAAAAAgtIONDZV1p2+T9NTmHdR3R7H/FAMaiu12tpzrMSm8rt0DAwAEAQAAAQEAAQIAAQMAAgABAQQAAQECAQABBQBv9XStPPg6j0Z6r3Q/OZdJi4drvREJrjvJPK8YW64ShQG0eptmIIp8mGGFYK5BLMNyQpL46u9ZXXwojncNEIyqlwIAAAAAAAAAINBYq6lgg7ZyFi2h1ioHIotsbOQ1o+iUksExSDwcKqKxb/V0rTz4Oo9Geq90PzmXSYuHa70RCa47yTyvGFuuEoVMBAAAAAAAAICWmAAAAAAAAA==',
+			),
+		);
+
+		const verified1 = await ck1.verifyWithDigest(
+			'3chbxaRdk1m4KbkgTaVuZP9c7yQLL7FVPAKue76jWW7e',
+			parseSerializedSignature(
+				'AMjOGEQCq7G4hBspXgAVG5r2T9ifGSBHH3Tm6dHcplp6MPk9bOB/Mn+S45+7AODP8z6sz3DMuwv6xhtmRkgjtAZ0WEX4SRhH6v/z3xBOkcjTzNLYlxe8sRjGiDb97et5+Q==',
+			).signature,
+		);
+
+		expect(verified1).toEqual(true);
+
+		expect(fromB58('3chbxaRdk1m4KbkgTaVuZP9c7yQLL7FVPAKue76jWW7e')).toEqual(
+			fromB64('JtycoE0uSY1rD45vSaPEE6KInYm87KzQ0gO/aBJ7y90='),
+		);
+
+		// nyc private key
+		console.log(encodeSuiPrivateKey(fromHEX("bb790410cd80fa95b104900497c86248ec858d920dbbc3521055b3ae732f29d8"), 'ED25519'));
 	});
 
 	it('`combinePartialSigs()` with zklogin sigs', async () => {
@@ -463,6 +494,7 @@ describe('Multisig address creation:', () => {
 				'AAABACACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgEBAQABAAC5wHgKOUPN4TokCb8abwauYLDf8rLzcyYM9ieqT0OliAGbB4FfBEl+LgXSLKw6oGFBCyCGjMYZFUxCocYb6ZAnFwEAAAAAAAAAIJZw7UpW1XHubORIOaY8d2+WyBNwoJ+FEAxlsa7h7JHrucB4CjlDzeE6JAm/Gm8GrmCw3/Ky83MmDPYnqk9DpYgBAAAAAAAAABAnAAAAAAAAAA==',
 			),
 		);
+		console.log("k6 sign transaction block");
 		const sig1 = await k6.signTransactionBlock(data);
 		const zklogin_sig =
 			'BQNNMTczMTgwODkxMjU5NTI0MjE3MzYzNDIyNjM3MTc5MzI3MTk0Mzc3MTc4NDQyODI0MTAxODc5NTc5ODQ3NTE5Mzk5NDI4OTgyNTEyNTBNMTEzNzM5NjY2NDU0NjkxMjI1ODIwNzQwODIyOTU5ODUzODgyNTg4NDA2ODE2MTgyNjg1OTM5NzY2OTczMjU4OTIyODA5MTU2ODEyMDcBMQMCTDU5Mzk4NzExNDczNDg4MzQ5OTczNjE3MjAxMjIyMzg5ODAxNzcxNTIzMDMyNzQzMTEwNDcyNDk5MDU5NDIzODQ5MTU3Njg2OTA4OTVMNDUzMzU2ODI3MTEzNDc4NTI3ODczMTIzNDU3MDM2MTQ4MjY1MTk5Njc0MDc5MTg4ODI4NTg2NDk2Njg4NDAzMjcxNzA0OTgxMTcwOAJNMTA1NjQzODcyODUwNzE1NTU0Njk3NTM5OTA2NjE0MTA4NDAxMTg2MzU5MjU0NjY1OTcwMzcwMTgwNTg3NzAwNDEzNDc1MTg0NjEzNjhNMTI1OTczMjM1NDcyNzc1NzkxNDQ2OTg0OTYzNzIyNDI2MTUzNjgwODU4MDEzMTMzNDMxNTU3MzU1MTEzMzAwMDM4ODQ3Njc5NTc4NTQCATEBMANNMTU3OTE1ODk0NzI1NTY4MjYyNjMyMzE2NDQ3Mjg4NzMzMzc2MjkwMTUyNjk5ODQ2OTk0MDQwNzM2MjM2MDMzNTI1Mzc2Nzg4MTMxNzFMNDU0Nzg2NjQ5OTI0ODg4MTQ0OTY3NjE2MTE1ODAyNDc0ODA2MDQ4NTM3MzI1MDAyOTQyMzkwNDExMzAxNzQyMjUzOTAzNzE2MjUyNwExMXdpYVhOeklqb2lhSFIwY0hNNkx5OXBaQzUwZDJsMFkyZ3VkSFl2YjJGMWRHZ3lJaXcCMmV5SmhiR2NpT2lKU1V6STFOaUlzSW5SNWNDSTZJa3BYVkNJc0ltdHBaQ0k2SWpFaWZRTTIwNzk0Nzg4NTU5NjIwNjY5NTk2MjA2NDU3MDIyOTY2MTc2OTg2Njg4NzI3ODc2MTI4MjIzNjI4MTEzOTE2MzgwOTI3NTAyNzM3OTExCgAAAAAAAABhABHpkQ5JvxqbqCKtqh9M0U5c3o3l62B6ALVOxMq6nsc0y3JlY8Gf1ZoPA976dom6y3JGBUTsry6axfqHcVrtRAy5xu4WMO8+cRFEpkjbBruyKE9ydM++5T/87lA8waSSAA==';
