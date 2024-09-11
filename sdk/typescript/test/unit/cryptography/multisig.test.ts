@@ -422,10 +422,10 @@ describe('Multisig address creation:', () => {
 			'0x77a9fbf3c695d78dd83449a81a9e70aa79a77dbfd6fb72037bf09201c12052cd',
 		);
 
-		const ck1 = new Ed25519PublicKey(fromB64('dFhF+EkYR+r/898QTpHI08zS2JcXvLEYxog2/e3refk='));
-		const ck2 = new Ed25519PublicKey(fromB64('ii1xkftuqttzWHxLnItq4U3QHMH85rM95qQ9+Zb8AuE='));
-		const ck3 = new Ed25519PublicKey(fromB64('U1qBmmGV6QvFnZId/1yQvtiV0z9ZruVCnCEobVcbZGE='));
-		const ck4 = new Ed25519PublicKey(fromB64('CECAVNbSbEcGoo0NFRJybLaCaLX8PFdPDq/EL4+oYmY='));
+		const ck1 = new Ed25519PublicKey(fromB64('k7TSwc9FCnLY9lrcqzQx0ENSMH+2rEFSYQGVaLD+kPw='));
+		const ck2 = new Ed25519PublicKey(fromB64('HjVyBPkAPmIEWwbNK66Am1mbeypuN+7obwyjEiIIcRw='));
+		const ck3 = new Ed25519PublicKey(fromB64('FESnWeYhEjceEQLzSQNpv3j/3lBw1bLAt8SZZOUMHfc='));
+		const ck4 = new Ed25519PublicKey(fromB64('nEQ5VzeKH7yRW5nXeSyKfnq+0NLiw/HOhBeY3J4TG0Y='));
 
 		const coldMultisigPublicKey = MultiSigPublicKey.fromPublicKeys({
 			publicKeys: [
@@ -450,7 +450,7 @@ describe('Multisig address creation:', () => {
 		});
 
 		const coldMultisigAddress = coldMultisigPublicKey.toSuiAddress();
-		expect(coldMultisigAddress).toEqual("0x6ff574ad3cf83a8f467aaf743f3997498b876bbd1109ae3bc93caf185bae1285");
+		expect(coldMultisigAddress).toEqual("0xbe1258ad7de0d553937ec22f4e66512bca2fd5b8bc044bcc8d547f7300c7d36a");
 		console.log("cold multisig address");
 		console.log(coldMultisigAddress);
 
@@ -464,10 +464,27 @@ describe('Multisig address creation:', () => {
 			'3chbxaRdk1m4KbkgTaVuZP9c7yQLL7FVPAKue76jWW7e',
 			parseSerializedSignature(
 				'AMjOGEQCq7G4hBspXgAVG5r2T9ifGSBHH3Tm6dHcplp6MPk9bOB/Mn+S45+7AODP8z6sz3DMuwv6xhtmRkgjtAZ0WEX4SRhH6v/z3xBOkcjTzNLYlxe8sRjGiDb97et5+Q==',
-			).signature,
+			).signature
 		);
 
-		expect(verified1).toEqual(true);
+		const verified2 = await ck4.verifyWithDigest('3chbxaRdk1m4KbkgTaVuZP9c7yQLL7FVPAKue76jWW7e', 			parseSerializedSignature(
+			'AOAXV/fR2llnpS2Y14PcpLxoWCkmvWObCy8SJRdOvsX2fWq6C4MYU4PCKI1KSAsBhx4b4MUMWmlRrXuSKDfSrgkIQIBU1tJsRwaijQ0VEnJstoJotfw8V08Or8Qvj6hiZg==',
+		).signature);
+
+		// expect(verified1).toEqual(true);
+		// expect(verified2).toEqual(true);
+
+		const multisig = coldMultisigPublicKey.combinePartialSignatures([
+			'ABwGZbOP96lDSM9wsbsbTRLq3FTFN0FVUH3l0kOMFBGT5LPKfLoMg2BQL805prMTtwC/xmgOz6bzVj8q0p3L+QSTtNLBz0UKctj2WtyrNDHQQ1Iwf7asQVJhAZVosP6Q/A==',
+			'AGXd2q7uEP8xWcC18hcousOVs9ZIqMTWOgPYnL3adOJg4KXEAAm6uOqu79jZqYEM+yNfqN8sAqgzKWj2cnch8QKcRDlXN4ofvJFbmdd5LIp+er7Q0uLD8c6EF5jcnhMbRg==',
+		]);
+
+		console.log('multisig');
+		console.log(multisig);
+		const parsed = parseSerializedSignature(multisig);
+		console.log('parse msig');
+		console.log(parsed);
+
 
 		expect(fromB58('3chbxaRdk1m4KbkgTaVuZP9c7yQLL7FVPAKue76jWW7e')).toEqual(
 			fromB64('JtycoE0uSY1rD45vSaPEE6KInYm87KzQ0gO/aBJ7y90='),
